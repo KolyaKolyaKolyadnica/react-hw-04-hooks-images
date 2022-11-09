@@ -1,0 +1,15 @@
+.galleryItem {
+  width: 300px;
+  height: 200px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 5px;
+}
+.galleryItem > img {
+  object-fit: contain;
+  display: block;
+  width: 100%;
+  height: auto;
+}

@@ -1,0 +1,29 @@
+.searchbar {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  border: 1px solid #000;
+}
+.form {
+  /* display: flex; */
+  /* justify-content: space-between; */
+  /* align-items: center; */
+  /* width: 20%; */
+  /* height: 30px; */
+
+  width: auto;
+  /* border: 11px solid #000; */
+}
+.button {
+  height: 34px;
+}
+.buttonLabel {
+}
+.input {
+  /* display: flex; */
+  /* justify-content: center; */
+  /* align-items: center; */
+  height: 30px;
+  width: 200px;
+}
