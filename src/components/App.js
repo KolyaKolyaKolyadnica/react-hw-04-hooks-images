@@ -48,6 +48,7 @@ class App extends Component {
         `https://pixabay.com/api/?key=${KEY}&q=${searchingWord}&page=${page}&per_page=${PER_PAGE}`
       )
         .then(response => {
+          console.log('response ', response);
           if (response.ok) {
             return response.json();
           }
@@ -56,12 +57,13 @@ class App extends Component {
             new Error(`Не удалось найти картинки по запросу ${searchingWord}`)
           );
         })
-        .then(newImages =>
+        .then(newImages => {
+          // console.log('dass');
           this.setState(prevState => ({
             foundImages: [...prevState.foundImages, ...newImages.hits],
             status: Status.RESOLVED,
-          }))
-        )
+          }));
+        })
         .catch(error => {
           this.setState({ error: error.message, status: Status.REJECTED });
         });
@@ -127,6 +129,7 @@ class App extends Component {
           {foundImages.length >= apiAttributes.PER_PAGE && (
             <Button onClickLoadMoreButton={this.loadMoreImages} />
           )}
+
           {showModal && (
             <Modal onClose={this.toggleModal} image={imageOnModal} />
           )}
