@@ -10,6 +10,6 @@
 .galleryItem > img {
   object-fit: contain;
   display: block;
-  width: 100%;
-  height: auto;
+  width: auto;
+  max-height: 100%;
 }

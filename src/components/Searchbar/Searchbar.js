@@ -3,24 +3,24 @@ import style from './Searchbar.module.css';
 
 class Searchbar extends Component {
   state = {
-    searchingWord: '',
+    query: '',
   };
 
-  setSearchingWord = e => {
-    this.setState({ searchingWord: e.target.value });
+  setquery = e => {
+    this.setState({ query: e.target.value });
   };
 
   onSubmit = e => {
     e.preventDefault();
 
-    if (this.state.searchingWord.trim() === '') {
+    if (this.state.query.trim() === '') {
       alert('Треба, щось ввести у поле.');
       return;
     }
 
-    this.props.onSubmit(this.state);
+    this.props.onSubmit(this.state.query);
 
-    this.setState({ searchingWord: '' });
+    this.setState({ query: '' });
   };
 
   render() {
@@ -37,8 +37,8 @@ class Searchbar extends Component {
             autoComplete="off"
             autoFocus
             placeholder="Search images and photos"
-            onChange={this.setSearchingWord}
-            value={this.state.searchingWord}
+            onChange={this.setquery}
+            value={this.state.query}
 
             // Паттерн временный, может будет время разобраться
             // pattern="^[a-zA-Zа-яА-Я]+(([' -][a-zA-Zа-яА-Я ])?[a-zA-Zа-яА-Я]*)*$"

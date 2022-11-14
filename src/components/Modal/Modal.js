@@ -20,8 +20,6 @@ class Modal extends Component {
     }
   };
 
-  componentDidUpdate() {}
-
   render() {
     return createPortal(
       <div className={style.overlay} onClick={this.clickOnOverlay}>

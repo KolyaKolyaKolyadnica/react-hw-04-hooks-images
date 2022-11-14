@@ -1,4 +1,6 @@
 import { Component } from 'react';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 import Searchbar from './Searchbar';
 import ImageGallery from './ImageGallery';
@@ -6,10 +8,10 @@ import Button from './Button';
 import Modal from './Modal';
 import Loader from './Loader';
 
-const apiAttributes = {
-  KEY: '29580630-b4d6d43b83d12c4d9cbbf2fc9',
-  PER_PAGE: 12,
-};
+import ImageApiService from 'services/ImageApiService';
+
+const api = new ImageApiService({});
+
 const Status = {
   IDLE: 'idle',
   PENDING: 'pending',
@@ -19,69 +21,69 @@ const Status = {
 
 class App extends Component {
   state = {
-    request: '',
     foundImages: [],
-    imagesPage: 1,
     status: Status.IDLE,
     error: '',
     showModal: false,
     imageOnModal: null,
   };
 
-  startSearchImages = ({ searchingWord }) => {
-    this.fetchImages(searchingWord, 1);
+  startSearchImages = query => {
+    this.setState({
+      foundImages: [],
+    });
 
-    this.setState({ request: searchingWord, foundImages: [], imagesPage: 1 });
+    api.page = 1;
+
+    this.fetchImages(query);
   };
 
-  fetchImages = (searchingWord, page) => {
-    const { KEY, PER_PAGE } = apiAttributes;
+  fetchImages = query => {
+    this.setState({
+      status: Status.PENDING,
+    });
 
-    this.setState({ status: Status.PENDING });
+    const fetchImages = api.fetchImages(query);
 
     setTimeout(() => {
-      //
-      // Только для теста!!! В финальном варианте вырезать начиная от сюда:
-      //
-
-      fetch(
-        `https://pixabay.com/api/?key=${KEY}&q=${searchingWord}&page=${page}&per_page=${PER_PAGE}`
-      )
+      fetchImages
         .then(response => {
-          console.log('response ', response);
           if (response.ok) {
             return response.json();
           }
 
+          // У Репеты работало от кракозябры. У меня нет.
+          // Может это из-за особенности бэка Pixabay?
+          // Так или иначе, как мне смоделировать работу этой "нью Эрор"?
           return Promise.reject(
-            new Error(`Не удалось найти картинки по запросу ${searchingWord}`)
+            new Error(
+              `При поиске по запросу ${query} с сервера пришел промис с ошибкой.`
+            )
           );
         })
         .then(newImages => {
-          // console.log('dass');
           this.setState(prevState => ({
             foundImages: [...prevState.foundImages, ...newImages.hits],
             status: Status.RESOLVED,
           }));
+
+          // От кракозябры вот эти строки:
+          if (newImages.hits.length === 0) {
+            this.setState({ status: Status.REJECTED });
+            toast(`Ничего не найдено по запросу "${query}".`);
+          }
         })
         .catch(error => {
           this.setState({ error: error.message, status: Status.REJECTED });
+          toast(`Произошла ОШИБКА!!! А именно: "${error.message}".`);
         });
-
-      //
-      // Только для теста!!! Заканчивая тут!!!
-      //
-    }, 500);
+    }, 300);
   };
 
   loadMoreImages = () => {
-    const { request, imagesPage } = this.state;
+    api.page += 1;
 
-    this.fetchImages(request, imagesPage + 1);
-
-    this.setState(prevState => ({
-      imagesPage: prevState.imagesPage + 1,
-    }));
+    this.fetchImages(api.query);
   };
 
   toggleModal = () => {
@@ -98,7 +100,7 @@ class App extends Component {
   };
 
   render() {
-    const { foundImages, status, error, showModal, imageOnModal } = this.state;
+    const { foundImages, status, showModal, imageOnModal } = this.state;
 
     if (status === 'idle') {
       return (
@@ -126,7 +128,7 @@ class App extends Component {
             images={foundImages}
             getIdChosenImg={this.getLargeImage}
           />
-          {foundImages.length >= apiAttributes.PER_PAGE && (
+          {foundImages.length >= api.perPage && (
             <Button onClickLoadMoreButton={this.loadMoreImages} />
           )}
 
@@ -141,11 +143,7 @@ class App extends Component {
       return (
         <>
           <Searchbar onSubmit={this.startSearchImages} />
-          <div>
-            <p>Йой, щось зламалось... Помилка: {error}</p>
-            <p>Oops, something broke... Error: {error}</p>
-            <p>Ой, что-то сломалось... Ошибка: {error}</p>
-          </div>
+          <ToastContainer />
         </>
       );
     }
