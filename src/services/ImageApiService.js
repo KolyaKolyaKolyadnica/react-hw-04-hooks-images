@@ -11,18 +11,11 @@ class ImageApiService {
   fetchImages(searchingWord) {
     this.query = searchingWord;
 
-    try {
-      const fetchImages = fetch(
-        `${this.URL}/?key=${this.KEY}&q=${this.query}&page=${this.page}&per_page=${this.perPage}`
-      );
+    const fetchImages = fetch(
+      `${this.URL}/?key=${this.KEY}&q=${this.query}&page=${this.page}&per_page=${this.perPage}`
+    );
 
-      return fetchImages;
-    } catch (error) {
-      // Почему не светится в консоли? А без catch, try не хочет работать.
-      // Как быть? По сути этот консолог просто заглушка.
-      // С ошибкой работаю в Арр после then-ов.
-      console.log('error ', error);
-    }
+    return fetchImages;
   }
 }
 

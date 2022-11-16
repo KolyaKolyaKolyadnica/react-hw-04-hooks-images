@@ -1,21 +1,17 @@
 import style from './ImageGalleryItem.module.css';
 
-function ImageGalleryItem({ images, getIdChosenImg }) {
-  const imageGalleryItem = images.map(image => {
-    return (
-      <li className={style.galleryItem} key={image.id}>
-        <img
-          src={image.webformatURL}
-          alt={image.tags}
-          onClick={getIdChosenImg}
-          id={image.id}
-          data-large-image={image.largeImageURL}
-        />
-      </li>
-    );
-  });
-
-  return <>{imageGalleryItem}</>;
+function ImageGalleryItem({ image, getChosenImg }) {
+  return (
+    <li className={style.galleryItem}>
+      <img
+        src={image.webformatURL}
+        alt={image.tags}
+        onClick={getChosenImg}
+        id={image.id}
+        data-large-image={image.largeImageURL}
+      />
+    </li>
+  );
 }
 
 export default ImageGalleryItem;

@@ -1,12 +1,16 @@
 import ImageGalleryItem from '../ImageGalleryItem';
 import style from './ImageGallery.module.css';
 
-function ImageGallery({ images, getIdChosenImg }) {
-  console.log('images ', images);
-
+function ImageGallery({ images, getChosenImg }) {
   return (
     <ul className={style.gallery}>
-      <ImageGalleryItem images={images} getIdChosenImg={getIdChosenImg} />
+      {images.map(image => (
+        <ImageGalleryItem
+          image={image}
+          getChosenImg={getChosenImg}
+          key={image.id}
+        />
+      ))}
     </ul>
   );
 }

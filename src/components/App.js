@@ -45,39 +45,37 @@ class App extends Component {
 
     const fetchImages = api.fetchImages(query);
 
-    setTimeout(() => {
-      fetchImages
-        .then(response => {
-          if (response.ok) {
-            return response.json();
-          }
+    fetchImages
+      .then(response => {
+        if (response.ok) {
+          return response.json();
+        }
 
-          // У Репеты работало от кракозябры. У меня нет.
-          // Может это из-за особенности бэка Pixabay?
-          // Так или иначе, как мне смоделировать работу этой "нью Эрор"?
-          return Promise.reject(
-            new Error(
-              `При поиске по запросу ${query} с сервера пришел промис с ошибкой.`
-            )
-          );
-        })
-        .then(newImages => {
-          this.setState(prevState => ({
-            foundImages: [...prevState.foundImages, ...newImages.hits],
-            status: Status.RESOLVED,
-          }));
+        // У Репеты работало от кракозябры. У меня нет.
+        // Может это из-за особенности бэка Pixabay?
+        // Так или иначе, как мне смоделировать работу этой "нью Эрор"?
+        return Promise.reject(
+          new Error(
+            `При поиске по запросу ${query} с сервера пришел промис с ошибкой.`
+          )
+        );
+      })
+      .then(newImages => {
+        this.setState(prevState => ({
+          foundImages: [...prevState.foundImages, ...newImages.hits],
+          status: Status.RESOLVED,
+        }));
 
-          // От кракозябры вот эти строки:
-          if (newImages.hits.length === 0) {
-            this.setState({ status: Status.REJECTED });
-            toast(`Ничего не найдено по запросу "${query}".`);
-          }
-        })
-        .catch(error => {
-          this.setState({ error: error.message, status: Status.REJECTED });
-          toast(`Произошла ОШИБКА!!! А именно: "${error.message}".`);
-        });
-    }, 300);
+        // От кракозябры вот эти строки:
+        if (newImages.hits.length === 0) {
+          this.setState({ status: Status.REJECTED });
+          toast.info(`Ничего не найдено по запросу "${query}".`);
+        }
+      })
+      .catch(error => {
+        this.setState({ error: error.message, status: Status.REJECTED });
+        toast.error(`Произошла ОШИБКА!!! А именно: "${error.message}".`);
+      });
   };
 
   loadMoreImages = () => {
@@ -94,7 +92,10 @@ class App extends Component {
 
   getLargeImage = e => {
     this.setState({
-      imageOnModal: e.target.dataset.largeImage,
+      imageOnModal: {
+        src: e.target.dataset.largeImage,
+        alt: e.target.alt,
+      },
       showModal: true,
     });
   };
@@ -126,7 +127,7 @@ class App extends Component {
           <Searchbar onSubmit={this.startSearchImages} />
           <ImageGallery
             images={foundImages}
-            getIdChosenImg={this.getLargeImage}
+            getChosenImg={this.getLargeImage}
           />
           {foundImages.length >= api.perPage && (
             <Button onClickLoadMoreButton={this.loadMoreImages} />
