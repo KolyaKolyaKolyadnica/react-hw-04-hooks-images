@@ -1,4 +1,4 @@
-import { Component } from 'react';
+import { useState, useEffect } from 'react';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -19,135 +19,132 @@ const Status = {
   REJECTED: 'rejected',
 };
 
-class App extends Component {
-  state = {
-    foundImages: [],
-    status: Status.IDLE,
-    error: '',
-    showModal: false,
-    imageOnModal: null,
+function App() {
+  const [foundImages, setFoundImages] = useState([]);
+  const [status, setStatus] = useState(Status.IDLE);
+  // const [error, setError] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [imageOnModal, setImageOnModal] = useState(null);
+  const [query, setQuery] = useState(null);
+
+  useEffect(() => {
+    if (query !== null) {
+      api.startSearchingNewQuery();
+      fetchImages();
+    }
+  }, [query]);
+
+  const startSearchImages = newQuery => {
+    if (query === newQuery) {
+      toast.info(
+        `Я і так показую картинки за запитом: "${query}". Придумай щось новеньке.`
+      );
+      return;
+    }
+
+    setQuery(newQuery);
+    setFoundImages([]);
   };
 
-  startSearchImages = query => {
-    this.setState({
-      foundImages: [],
-    });
-
-    api.page = 1;
-
-    this.fetchImages(query);
+  const loadMoreImages = () => {
+    api.loadMore();
+    fetchImages();
   };
 
-  fetchImages = query => {
-    this.setState({
-      status: Status.PENDING,
-    });
+  const fetchImages = () => {
+    setStatus(Status.PENDING);
 
-    const fetchImages = api.fetchImages(query);
-
-    fetchImages
-      .then(response => {
-        if (response.ok) {
-          return response.json();
-        }
-
-        // У Репеты работало от кракозябры. У меня нет.
-        // Может это из-за особенности бэка Pixabay?
-        // Так или иначе, как мне смоделировать работу этой "нью Эрор"?
-        return Promise.reject(
-          new Error(
-            `При поиске по запросу ${query} с сервера пришел промис с ошибкой.`
-          )
-        );
-      })
+    api
+      .fetchImages(query)
       .then(newImages => {
-        this.setState(prevState => ({
-          foundImages: [...prevState.foundImages, ...newImages.hits],
-          status: Status.RESOLVED,
-        }));
+        setFoundImages([...foundImages, ...newImages.hits]);
+        setStatus(Status.RESOLVED);
 
-        // От кракозябры вот эти строки:
         if (newImages.hits.length === 0) {
-          this.setState({ status: Status.REJECTED });
+          setStatus(Status.REJECTED);
           toast.info(`Ничего не найдено по запросу "${query}".`);
         }
       })
       .catch(error => {
-        this.setState({ error: error.message, status: Status.REJECTED });
+        setStatus(Status.REJECTED);
         toast.error(`Произошла ОШИБКА!!! А именно: "${error.message}".`);
       });
   };
 
-  loadMoreImages = () => {
-    api.page += 1;
+  // const fetchImages = () => {
+  //   setStatus(Status.PENDING);
 
-    this.fetchImages(api.query);
-  };
+  //   api
+  //     .fetchImages(query)
+  //     .then(newImages => {
+  //       setFoundImages([...foundImages, ...newImages.hits]);
+  //       setStatus(Status.RESOLVED);
 
-  toggleModal = () => {
-    this.setState(prevState => ({
-      showModal: !prevState,
-    }));
-  };
+  //       if (newImages.hits.length === 0) {
+  //         setStatus(Status.REJECTED);
+  //         toast.info(`Ничего не найдено по запросу "${query}".`);
+  //       }
+  //     })
+  //     .catch(error => {
+  //       setStatus(Status.REJECTED);
+  //       toast.error(`Произошла ОШИБКА!!! А именно: "${error.message}".`);
+  //     });
+  // };
 
-  getLargeImage = e => {
-    this.setState({
-      imageOnModal: {
-        src: e.target.dataset.largeImage,
-        alt: e.target.alt,
-      },
-      showModal: true,
+  const getLargeImage = e => {
+    setImageOnModal({
+      src: e.target.dataset.largeImage,
+      alt: e.target.alt,
     });
+
+    setShowModal(!showModal);
   };
 
-  render() {
-    const { foundImages, status, showModal, imageOnModal } = this.state;
+  if (status === 'idle') {
+    return (
+      <>
+        <Searchbar onSubmit={startSearchImages} />
+      </>
+    );
+  }
 
-    if (status === 'idle') {
-      return (
-        <>
-          <Searchbar onSubmit={this.startSearchImages} />
-        </>
-      );
-    }
+  if (status === 'pending') {
+    return (
+      <>
+        <Searchbar onSubmit={startSearchImages} />
+        {foundImages.length > 0 && <ImageGallery images={foundImages} />}
+        <Loader />
+      </>
+    );
+  }
 
-    if (status === 'pending') {
-      return (
-        <>
-          <Searchbar onSubmit={this.startSearchImages} />
-          {foundImages.length > 0 && <ImageGallery images={foundImages} />}
-          <Loader />
-        </>
-      );
-    }
+  if (status === 'resolved') {
+    return (
+      <>
+        <Searchbar onSubmit={startSearchImages} />
+        <ImageGallery images={foundImages} getChosenImg={getLargeImage} />
+        {foundImages.length >= api.perPage && (
+          <Button onClickLoadMoreButton={loadMoreImages} />
+        )}
 
-    if (status === 'resolved') {
-      return (
-        <>
-          <Searchbar onSubmit={this.startSearchImages} />
-          <ImageGallery
-            images={foundImages}
-            getChosenImg={this.getLargeImage}
+        {showModal && (
+          <Modal
+            onClose={() => setShowModal(!showModal)}
+            image={imageOnModal}
           />
-          {foundImages.length >= api.perPage && (
-            <Button onClickLoadMoreButton={this.loadMoreImages} />
-          )}
+        )}
+        <ToastContainer />
+      </>
+    );
+  }
 
-          {showModal && (
-            <Modal onClose={this.toggleModal} image={imageOnModal} />
-          )}
-        </>
-      );
-    }
-
-    if (status === 'rejected') {
-      return (
-        <>
-          <Searchbar onSubmit={this.startSearchImages} />
-          <ToastContainer />
-        </>
-      );
-    }
+  if (status === 'rejected') {
+    return (
+      <>
+        <Searchbar onSubmit={startSearchImages} />
+        <ToastContainer />
+      </>
+    );
   }
 }
 
